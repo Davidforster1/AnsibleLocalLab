@@ -1,0 +1,9 @@
+---
+
+#This will run the role basic, over the hosts in the jenkins group
+- hosts: ecommerce_site
+  become: true
+  roles:
+    - main
+
+

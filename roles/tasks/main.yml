@@ -1,0 +1,23 @@
+---
+#Use Yum Package Manager to install httpd web service 
+- name: "Install httpd"
+  yum: pkg={{ item }} state=installed
+  with_items:
+  - httpd php php-mysql
+
+#Configure httpd to make index.php the default page
+- name: "Set index.php as homepage"
+  lineinfile:
+    path: /etc/hosts
+    search_string: 'DirectoryIndex index.html'
+    line: 'DirectoryIndex index.php'
+
+#Ensure the httpd service is started
+
+- name: "Start httpd service"
+  service:
+    name: httpd
+    state: started
+
+
+    #https://github.com/kodekloudhub/learning-app-ecommerce
