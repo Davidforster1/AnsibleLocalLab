@@ -1,0 +1,96 @@
+#Use Yum Package Manager to install httpd web service 
+- name: "Install httpd and other prerequisites"
+  yum: pkg={{ item }} state=installed
+  with_items:
+  - httpd 
+  - php
+  - php-mysqlnd
+  - git
+  - mariadb-server
+
+#- name: "Install Ansible Galaxy collections"
+#  galaxy:
+#    type: collection
+#    name: ansible.posix
+
+#Ensure the mariadb-server service is started
+
+#- name: "Start mariadb-server service"
+#  service:
+#    name: mariadb-server
+#    state: started
+
+#- name: Run several insert queries against db test_db in single transaction
+#  command:
+#    login_db: test_db
+#    query:
+#    - MariaDB > CREATE DATABASE ecomdb;
+#    - MariaDB > CREATE USER 'ecomuser'@'localhost' IDENTIFIED BY 'ecompassword';
+#    - MariaDB > GRANT ALL PRIVILEGES ON *.* TO 'ecomuser'@'localhost';
+#    - MariaDB > FLUSH PRIVILEGES;
+#    single_transaction: yes
+
+#Loads in product info to database
+- name: "Create SQL file"
+  shell: |
+    cat > db-load-script.sql <<-EOF
+    USE ecomdb;
+    CREATE TABLE products (id mediumint(8) unsigned NOT NULL auto_increment,Name varchar(255) default NULL,Price varchar(255) default NULL, ImageUrl varchar(255) default NULL,PRIMARY KEY (id)) AUTO_INCREMENT=1;
+    INSERT INTO products (Name,Price,ImageUrl) VALUES ("Laptop","100","c-1.png"),("Drone","200","c-2.png"),("VR","300","c-3.png"),("Tablet","50","c-5.png"),("Watch","90","c-6.png"),("Phone Covers","20","c-7.png"),("Phone","80","c-8.png"),("Laptop","150","c-4.png");
+    EOF
+    exit 0
+
+#run db-load-script.sql here 
+- name: "Load DB Script to populate database with products"
+  command:
+    login_db: test_db
+    query:
+    - USE ecomdb;
+    - CREATE TABLE products (id mediumint(8) unsigned NOT NULL auto_increment,Name varchar(255) default NULL,Price varchar(255) default NULL, ImageUrl varchar(255) default NULL,PRIMARY KEY (id)) AUTO_INCREMENT=1;
+    - INSERT INTO products (Name,Price,ImageUrl) VALUES ("Laptop","100","c-1.png"),("Drone","200","c-2.png"),("VR","300","c-3.png"),("Tablet","50","c-5.png"),("Watch","90","c-6.png"),("Phone Covers","20","c-7.png"),("Phone","80","c-8.png"),("Laptop","150","c-4.png");
+
+#open port 80 on firewall
+- name: "Open port 80 for web ccess"
+  firewalld:
+    permanent: yes
+    zone: public
+    port: 80/tcp
+    state: enabled
+
+#open port 3306 on firewall
+- name: "Open port 3306 for db access"
+  firewalld:
+    permanent: yes
+    zone: public
+    port: 3306/tcp
+    state: enabled
+
+#Reload firewall
+- name: "Reload the firewall to apply changes"
+  systemd:
+    name: firewalld
+    state: reloaded
+
+  
+#Configure httpd to make index.php the default page
+- name: "Set index.php as homepage"
+  lineinfile:
+    path: /etc/hosts
+    search_string: 'DirectoryIndex index.html'
+    line: 'DirectoryIndex index.php'
+
+- name: "Grab site files from Git Repo"
+  git:
+    repo: 'https://github.com/kodekloudhub/learning-app-ecommerce.git'
+    dest: '/var/www/html/'
+
+#Ensure the httpd service is started
+
+- name: "Start httpd service"
+  service:
+    name: httpd
+    state: started
+
+
+    #https://github.com/kodekloudhub/learning-app-ecommerce
+

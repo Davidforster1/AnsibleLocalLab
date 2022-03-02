@@ -1,0 +1,14 @@
+# Server connection info
+
+maria_db1 ansible_host=192.168.0.24 ansible_ssh_pass=osboxes.org
+web_node1 ansible_host=192.168.0.24 ansible_ssh_pass=osboxes.org
+
+# Groups
+[db_nodes]
+maria_db1
+
+[web_nodes]
+web_node1
+
+[ecommerce_site]
+web_node1
